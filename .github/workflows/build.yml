@@ -152,11 +152,11 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            linux-builds/*.deb
-            linux-builds/*.rpm
-            linux-builds/*.AppImage
+            linux-builds/deb/*.deb
+            linux-builds/rpm/*.rpm
+            linux-builds/appimage/*.AppImage
             android-build/*.aab
-            windows-builds/*.msi
-            windows-builds/*.exe
+            windows-builds/msi/*.msi
+            windows-builds/nsis/*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
