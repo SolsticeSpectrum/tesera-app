@@ -12,6 +12,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        
+      - name: Setup Android NDK
+        run: |
+          sdkmanager --install "ndk;27.1.12297006"
+          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.1.12297006" >> $GITHUB_ENV
+
       - name: Setup Java 17
         uses: actions/setup-java@v3
         with:
@@ -41,29 +54,21 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
-      
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        
-      - name: Setup Android NDK
-        run: |
-          sdkmanager --install "ndk;27.1.12297006"
-          echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.1.12297006" >> $GITHUB_ENV
-        
+            
       - name: Cache Tauri CLI
+        id: cache-tauri
         uses: actions/cache@v3
         with:
           path: ~/.cargo/bin/cargo-tauri
           key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('**/Cargo.lock') }}
-
+        
       - name: Setup Tauri CLI
         run: |
-          cargo install tauri-cli --version '^2.0.0-rc' --locked
+          if ! command -v cargo-tauri &> /dev/null || [[ "$(cargo tauri --version)" != *"2.0.0-rc"* ]]; then
+            cargo install tauri-cli --version '^2.0.0-rc' --locked --force
+          else
+            echo "Tauri CLI 2.0.0-rc is already installed"
+          fi
         
       - name: Build for Linux
         run: cargo tauri build
@@ -107,16 +112,21 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
-
+            
       - name: Cache Tauri CLI
+        id: cache-tauri
         uses: actions/cache@v3
         with:
-          path: ~\.cargo\bin\cargo-tauri.exe
+          path: ~/.cargo/bin/cargo-tauri.exe
           key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('**/Cargo.lock') }}
-
+          
       - name: Setup Tauri CLI
         run: |
-          cargo install tauri-cli --version '^2.0.0-rc' --locked
+          if (!(Get-Command cargo-tauri -ErrorAction SilentlyContinue) -or !((cargo tauri --version) -like "*2.0.0-rc*")) {
+            cargo install tauri-cli --version '^2.0.0-rc' --locked --force
+          } else {
+            Write-Output "Tauri CLI 2.0.0-rc is already installed"
+          }
           
       - name: Build for Windows
         run: cargo tauri build
