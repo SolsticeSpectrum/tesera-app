@@ -23,6 +23,17 @@ jobs:
         with:
           toolchain: stable
           
+      - name: Cache rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -36,6 +47,12 @@ jobs:
           sdkmanager --install "ndk;27.1.12297006"
           echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.1.12297006" >> $GITHUB_ENV
         
+      - name: Cache Tauri CLI
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin/cargo-tauri
+          key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Setup Tauri CLI
         run: |
           cargo install tauri-cli --version '^2.0.0-rc' --locked
@@ -72,6 +89,23 @@ jobs:
         with:
           toolchain: stable
           
+      - name: Cache rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Cache Tauri CLI
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin/cargo-tauri
+          key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Setup Tauri CLI
         run: |
           cargo install tauri-cli --version '^2.0.0-rc' --locked
