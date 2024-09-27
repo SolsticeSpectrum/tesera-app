@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup Rust
+      - name: Setup rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -22,15 +22,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
       
-      - name: Setup Android SDK and NDK
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         
-      - name: Install Android NDK
+      - name: Setup Android NDK
         run: |
-          sdkmanager --install "ndk;25.2.9519653"
+          sdkmanager --install "ndk;27.1.12297006""
           echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
         
-      - name: Install Tauri CLI
+      - name: Setup Tauri CLI
         run: |
           cargo install tauri-cli --version '^2.0.0-rc' --locked
         
@@ -61,12 +61,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup Rust
+      - name: Setup rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           
-      - name: Install Tauri CLI
+      - name: Setup Tauri CLI
         run: |
           cargo install tauri-cli --version '^2.0.0-rc' --locked
           
