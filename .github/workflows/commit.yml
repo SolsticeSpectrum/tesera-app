@@ -19,7 +19,7 @@ jobs:
           java-version: '17'
       
       - name: Setup rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchain@v2
         with:
           toolchain: stable
           target: 'aarch64-linux-android armv7-linux-androideabi'
