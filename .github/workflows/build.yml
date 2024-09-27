@@ -2,8 +2,9 @@ name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [ main ]
+    paths-ignore:
+      - '*.md'
 
 jobs:
   build-linux-and-android:
@@ -138,8 +139,76 @@ jobs:
             target/release/bundle/msi/*.msi
             target/release/bundle/nsis/*.exe
 
+  build-apple:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Setup rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Add iOS targets
+        run: |
+          rustup target add aarch64-apple-ios
+          rustup target add x86_64-apple-ios
+          rustup target add aarch64-apple-ios-sim
+
+      - name: Cache rust dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Cache Tauri CLI
+        id: cache-tauri
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin/cargo-tauri
+          key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Setup Tauri CLI
+        run: |
+          if ! command -v cargo-tauri &> /dev/null || [[ "$(cargo tauri --version)" != *"2.0.0-rc"* ]]; then
+            cargo install tauri-cli --version '^2.0.0-rc' --locked --force
+          else
+            echo "Tauri CLI 2.0.0-rc is already installed"
+          fi
+
+      - name: Build for macOS (x86_64 and ARM)
+        run: cargo tauri build --target universal-apple-darwin
+
+      - name: Build for iOS
+        run: cargo tauri ios build
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-builds
+          path: |
+            target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            target/universal-apple-darwin/release/bundle/macos/*.app
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-build
+          path: target/iphoneos/release/bundle/ios/*.ipa
+
   release:
-    needs: [build-linux-and-android, build-windows]
+    needs: [build-linux-and-android, build-windows, build-apple]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -158,5 +227,8 @@ jobs:
             android-build/*.aab
             windows-builds/msi/*.msi
             windows-builds/nsis/*.exe
+            macos-builds/dmg/*.dmg
+            macos-builds/macos/*.app
+            ios-build/*.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
