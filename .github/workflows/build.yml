@@ -111,7 +111,7 @@ jobs:
       - name: Cache Tauri CLI
         uses: actions/cache@v3
         with:
-          path: ~/.cargo/bin/cargo-tauri
+          path: ~\.cargo\bin\cargo-tauri.exe
           key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Setup Tauri CLI
