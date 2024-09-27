@@ -192,9 +192,9 @@ jobs:
       - name: Build for macOS (x86_64 and ARM)
         run: cargo tauri build --target universal-apple-darwin
 
-      - name: Build for iOS
-        run: cargo tauri ios build
-
+#     - name: Build for iOS
+#       run: cargo tauri ios build
+#
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -203,11 +203,11 @@ jobs:
             target/universal-apple-darwin/release/bundle/dmg/*.dmg
             target/universal-apple-darwin/release/bundle/macos/*.app
 
-      - name: Upload iOS artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ios-build
-          path: target/iphoneos/release/bundle/ios/*.ipa
+#     - name: Upload iOS artifact
+#       uses: actions/upload-artifact@v3
+#       with:
+#         name: ios-build
+#         path: target/iphoneos/release/bundle/ios/*.ipa
 
   release:
     needs: [build-linux-and-android, build-windows, build-apple]
