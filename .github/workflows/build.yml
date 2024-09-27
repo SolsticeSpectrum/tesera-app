@@ -16,7 +16,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
-      
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         
@@ -24,12 +30,6 @@ jobs:
         run: |
           sdkmanager --install "ndk;27.1.12297006"
           echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.1.12297006" >> $GITHUB_ENV
-
-      - name: Setup Java 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
       
       - name: Setup rust
         uses: actions-rs/toolchain@v1
