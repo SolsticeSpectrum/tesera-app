@@ -22,15 +22,15 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-          
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-        
+
       - name: Setup Android NDK
         run: |
           sdkmanager --install "ndk;27.1.12297006"
           echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/27.1.12297006" >> $GITHUB_ENV
-      
+
       - name: Setup rust
         uses: actions-rs/toolchain@v1
         with:
@@ -43,7 +43,15 @@ jobs:
           rustup target add armv7-linux-androideabi
           rustup target add x86_64-linux-android
           rustup target add i686-linux-android
-          
+
+      - name: Setup Android signing
+        run: |
+          cd src-tauri/gen/android
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" > keystore.properties
+          echo "password=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
+          base64 -d <<< "${{ secrets.ANDROID_KEY_BASE64 }}" > $RUNNER_TEMP/keystore.jks
+          echo "storeFile=$RUNNER_TEMP/keystore.jks" >> keystore.properties
+
       - name: Cache rust dependencies
         uses: actions/cache@v3
         with:
@@ -54,14 +62,14 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
-            
+
       - name: Cache Tauri CLI
         id: cache-tauri
         uses: actions/cache@v3
         with:
           path: ~/.cargo/bin/cargo-tauri
           key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('**/Cargo.lock') }}
-        
+
       - name: Setup Tauri CLI
         run: |
           if ! command -v cargo-tauri &> /dev/null || [[ "$(cargo tauri --version)" != *"2.0.0-rc"* ]]; then
@@ -69,13 +77,13 @@ jobs:
           else
             echo "Tauri CLI 2.0.0-rc is already installed"
           fi
-        
+
       - name: Build for Linux
         run: cargo tauri build
-          
+
       - name: Build for Android
         run: cargo tauri android build
-          
+
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -84,7 +92,7 @@ jobs:
             target/release/bundle/deb/*.deb
             target/release/bundle/rpm/*.rpm
             target/release/bundle/appimage/*.AppImage
-          
+
       - name: Upload Android artifact
         uses: actions/upload-artifact@v3
         with:
@@ -96,12 +104,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          
+
       - name: Cache rust dependencies
         uses: actions/cache@v3
         with:
@@ -112,14 +120,14 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
-            
+
       - name: Cache Tauri CLI
         id: cache-tauri
         uses: actions/cache@v3
         with:
           path: ~/.cargo/bin/cargo-tauri.exe
           key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('**/Cargo.lock') }}
-          
+
       - name: Setup Tauri CLI
         run: |
           if (!(Get-Command cargo-tauri -ErrorAction SilentlyContinue) -or !((cargo tauri --version) -like "*2.0.0-rc*")) {
@@ -127,10 +135,10 @@ jobs:
           } else {
             Write-Output "Tauri CLI 2.0.0-rc is already installed"
           }
-          
+
       - name: Build for Windows
         run: cargo tauri build
-          
+
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -155,13 +163,16 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Add iOS targets
+      - name: Add macOS targets
         run: |
           rustup target add aarch64-apple-darwin
           rustup target add x86_64-apple-darwin
-          rustup target add aarch64-apple-ios
-          rustup target add x86_64-apple-ios
-          rustup target add aarch64-apple-ios-sim
+
+#     - name: Add iOS targets
+#       run: |
+#         rustup target add aarch64-apple-ios
+#         rustup target add x86_64-apple-ios
+#         rustup target add aarch64-apple-ios-sim
 
       - name: Cache rust dependencies
         uses: actions/cache@v3
@@ -194,7 +205,7 @@ jobs:
 
 #     - name: Build for iOS
 #       run: cargo tauri ios build
-#
+
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -214,10 +225,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Download all artifacts
         uses: actions/download-artifact@v3
-        
+
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
@@ -231,6 +242,6 @@ jobs:
             windows-builds/nsis/*.exe
             macos-builds/dmg/*.dmg
             macos-builds/macos/*.app
-            ios-build/*.ipa
+#           ios-build/*.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
