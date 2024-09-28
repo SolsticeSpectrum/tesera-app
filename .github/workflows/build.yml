@@ -2,8 +2,9 @@ name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [ main ]
+    paths-ignore:
+      - '*.md'
 
 jobs:
   build-linux-and-android:
@@ -68,6 +69,16 @@ jobs:
         with:
           path: ~/.cargo/bin/cargo-tauri
           key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Setup Tauri CLI
         run: |
@@ -228,6 +239,16 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v3
 
+      - name: Install zip
+        run: sudo apt-get install zip
+
+      - name: Zip macOS app
+        run: |
+          cd macos-builds/macos
+          for app in *.app; do
+            zip -r "../${app%.app}.zip" "$app"
+          done
+
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
@@ -240,7 +261,7 @@ jobs:
             windows-builds/msi/*.msi
             windows-builds/nsis/*.exe
             macos-builds/dmg/*.dmg
-            macos-builds/macos/*.app
+            macos-builds/*.zip
 #           ios-build/*.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
