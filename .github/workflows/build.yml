@@ -2,9 +2,8 @@ name: Build and Release
 
 on:
   push:
-    branches: [ main ]
-    paths-ignore:
-      - '*.md'
+    tags:
+      - 'v*'
 
 jobs:
   build-linux-and-android:

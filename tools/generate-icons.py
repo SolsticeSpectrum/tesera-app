@@ -98,7 +98,6 @@ def main():
         ("32x32.png", (32, 32)),
         ("128x128.png", (128, 128)),
         ("128x128@2x.png", (256, 256)),
-        ("icon.ico", (256, 256)),
         ("Square30x30Logo.png", (30, 30)),
         ("Square44x44Logo.png", (44, 44)),
         ("Square71x71Logo.png", (71, 71)),
